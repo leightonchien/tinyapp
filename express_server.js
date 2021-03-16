@@ -28,7 +28,7 @@ app.get("/hello", (req, res) => {
 
 //add /urls to send data to urls_index.ejs, all urls displayed on main page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -37,27 +37,47 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//new page
+//tell browser to go to new page aka (redirect)
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { 
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL] 
+
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]
   };
-  res.render("urls_show", templateVars);
+  res.render('urls_show', templateVars);
 });
 
+
+
+//new url added to be shown with all urls
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
+  // redirect to longURL
+  app.get("/u/:shortURL", (req, res) => {
+
+    const longURL = urlDatabase[req.params.shortURL];
+    res.redirect(longURL);
+  });
+
+  //delete URL (for post requests on server side)
+  //Post route: removes an URL resource
+  app.post('/urls/:shortURL/delete', (req, res) => {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  });
+  
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
 //Generate an "unique" shortURL, implement a function that returns a string of 6 random alphanumeric characters
-function generateRandomString() {
+const generateRandomString = () => {
   let result = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   
@@ -75,6 +95,15 @@ const generateShortURL = () => {
   return randomString;
 }; 
 
+//this func will show if short url exists
+const verifyShortUrl = URL => {
+  return urlDatabase[URL];
+}; 
+
+
+
+
+
 
 ////////////////////////////////////////////////////////////
 //example removed from main code
@@ -89,3 +118,8 @@ const generateShortURL = () => {
 //  app.get("/fetch", (req, res) => {
 //   res.send(`a = ${a}`);
 //  });
+
+// app.post('/urls', (req, res) => {
+//   console.log(req.body);
+//   res.send('Ok');
+// });
