@@ -33,18 +33,20 @@ app.get("/urls", (req, res) => {
 });
 
 //new url is created
-app.get("/urls/new", (req, res) => {
+app.get("/urls/new", (req, res) => { 
   res.render("urls_new");
 });
 
 //tell browser to go to new page aka (redirect)
 app.get("/urls/:shortURL", (req, res) => {
-
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
-  };
-  res.render('urls_show', templateVars);
+  let shortURL = req.params.shortURL;
+  if (verifyShortUrl(shortURL)) {
+    let longURL = urlDatabase[req.params.shortURL];
+    let templateVars = { shortURL: shortURL, longURL: longURL };
+    res.render("urls_show", templateVars);
+  } else {
+    res.send('does not exist');
+  }
 });
 
 
@@ -52,24 +54,33 @@ app.get("/urls/:shortURL", (req, res) => {
 //new url added to be shown with all urls
 app.post("/urls", (req, res) => {
 
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  const shortURL = generateShortURL();
+  const newURL = req.body.longURL;
+  urlDatabase[shortURL] = newURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
   // redirect to longURL
   app.get("/u/:shortURL", (req, res) => {
 
-    const longURL = urlDatabase[req.params.shortURL];
-    res.redirect(longURL);
+    const shortURL = req.params.shortURL;
+    if (verifyShortUrl(shortURL)) {
+      const longURL = urlDatabase[shortURL];
+      res.redirect(longURL);
+    } else {
+      res.status(404);
+      res.send('Does not exist');
+    }
   });
 
   //delete URL (for post requests on server side)
   //Post route: removes an URL resource
   app.post('/urls/:shortURL/delete', (req, res) => {
-    delete urlDatabase[req.params.shortURL];
+    const urlToDelete = req.params.shortURL;
+    delete urlDatabase[urlToDelete];
     res.redirect('/urls');
   });
+  
   
 
 app.listen(PORT, () => {
@@ -86,6 +97,7 @@ const generateRandomString = () => {
   }
   return result;
 };
+
 
 const generateShortURL = () => {
   let randomString = '';
@@ -106,7 +118,7 @@ const verifyShortUrl = URL => {
 
 
 ////////////////////////////////////////////////////////////
-//example removed from main code
+//example code removed from main code
 //a is not defined
 ////////////////////////////////////////////////////////////
 //
