@@ -60,32 +60,44 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-  // redirect to longURL
-  app.get("/u/:shortURL", (req, res) => {
+// redirect to longURL
+app.get("/u/:shortURL", (req, res) => {
 
-    const shortURL = req.params.shortURL;
-    if (verifyShortUrl(shortURL)) {
-      const longURL = urlDatabase[shortURL];
-      res.redirect(longURL);
-    } else {
-      res.status(404);
-      res.send('Does not exist');
-    }
-  });
+  const shortURL = req.params.shortURL;
+  if (verifyShortUrl(shortURL)) {
+    const longURL = urlDatabase[shortURL];
+    res.redirect(longURL);
+  } else {
+    res.status(404);
+    res.send('Does not exist');
+  }
+});
 
-  //delete URL (for post requests on server side)
-  //Post route: removes an URL resource
-  app.post('/urls/:shortURL/delete', (req, res) => {
-    const urlToDelete = req.params.shortURL;
-    delete urlDatabase[urlToDelete];
-    res.redirect('/urls');
-  });
-  
+//delete URL (for post requests on server side)
+//Post route: removes an URL resource
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const urlToDelete = req.params.shortURL;
+  delete urlDatabase[urlToDelete];
+  res.redirect('/urls');
+});
+
+//EDIT: allows us to edit existing shortened URLs in app
+app.post("/urls/:shortURL/edit", (req, res) => {
+  const key = req.params.shortURL;
+  urlDatabase[key] = req.body.longURL;
+  res.redirect('/urls')
+});
   
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
+
+
+
+//Helper functions////////////////////////////////////////////////////////////////////
 
 //Generate an "unique" shortURL, implement a function that returns a string of 6 random alphanumeric characters
 const generateRandomString = () => {
