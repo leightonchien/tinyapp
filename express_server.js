@@ -3,11 +3,14 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookie = require('cookie-parser');
+const morgan = require('morgan');
+
+//MIDDLEWARE
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookie());
+app.set("view engine", "ejs"); //set ejs as view engine
 
-//set ejs as view engine
-app.set("view engine", "ejs");
+app.use(morgan('dev')); //Helper that identify the clients who are accessing our application, logger that collects request logs (server)
 
 //shortURL: 'longURL'
 const urlDatabase = {
@@ -106,6 +109,13 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
 });
+
+//User registration form added/page added to register
+app.get("/register", (req, res) => {
+  templateVars = { username:req.cookies['username']}
+  res.render("urls_register", templateVars);
+  res.redirect('/urls');
+})
 
 
 app.listen(PORT, () => {
