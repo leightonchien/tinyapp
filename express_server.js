@@ -64,10 +64,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 
 //add /urls to send data to urls_index.ejs, all urls displayed on main page
 app.get("/urls", (req, res) => {
@@ -175,20 +171,23 @@ app.get("/u/:shortURL", (req, res) => {
 //Post route: removes an URL resource
 app.post('/urls/:shortURL/delete', (req, res) => {
 
-  if (!checkOwner(currentUser(req.session.user_id, userDatabase), req.params.shortURL, urlDatabase)) {
-    res.send('This id does not match yours. Please check id and try again.')
+  if (!checkOwner(currentUser(req.session.userId, userDatabase), req.params.shortURL, urlDatabase)) {
+    res.send('This id does not match yours. Please check id and try again.');
+  } else {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
   }
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
 });
 
 //EDIT: allows us to edit existing shortened URLs in app
 app.post("/urls/:shortURL/edit", (req, res) => {
-  if (!checkOwner(currentUser(req.session.user_id, userDatabase), req.params.shortURL, urlDatabase)) {
-    res.send('This id does not match yours. Please check id and try again.')
-  }
-  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-  res.redirect('/urls');
+
+  if (!checkOwner(currentUser(req.session.userId, userDatabase), req.params.shortURL, urlDatabase)) {
+    res.send('This id does not belong to you');
+  } else {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect('/urls');
+    }
 });
   
 
