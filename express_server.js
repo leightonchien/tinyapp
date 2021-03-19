@@ -27,21 +27,21 @@ app.use(cookieSession({
 
 //shortURL: 'longURL'
 const urlDatabase = {
-  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "shark"},
-  "9sm5xK": {longURL: "http://www.google.com", userID: "penguin"},
+  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "userID"},
+  "9sm5xK": {longURL: "http://www.google.com", userID: "userID"},
 };
 
 //store user as key object
 const userDatabase = {
-  "shark": {
-    id: "shark", 
-    email: "shark@ocean.com", 
-    password: "fish123"
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
   },
- "penguin": {
-    id: "penguin", 
-    email: "penguin@ocean.com", 
-    password: "swim123"
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
   },
 };
 
