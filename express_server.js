@@ -92,6 +92,8 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+
+
 //tell browser to go to new page aka (redirect)
 app.get("/urls/:shortURL", (req, res) => {
 
@@ -113,6 +115,17 @@ app.get("/urls/:shortURL", (req, res) => {
   }  
   });
 
+// redirect to longURL
+app.get("/u/:shortURL", (req, res) => {
+
+  let shortURL = req.params.shortURL;
+  if (verifyShortUrl(shortURL, urlDatabase)) {
+    const longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  } else {
+    res.status(404).send('Does not exist');
+  }
+});
 
 //User registration form 
 app.get("/register", (req, res) => {
@@ -155,17 +168,6 @@ app.post("/urls", (req, res) => {
   }
 });
 
-// redirect to longURL
-app.get("/u/:shortURL", (req, res) => {
-
-  let shortURL = req.params.shortURL;
-  if (verifyShortUrl(shortURL, urlDatabase)) {
-    const longURL = urlDatabase[shortURL].longURL;
-    res.redirect(longURL);
-  } else {
-    res.status(404).send('Does not exist');
-  }
-});
 
 //delete URL (for post requests on server side)
 //Post route: removes an URL resource
