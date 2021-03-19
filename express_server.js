@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 8080; // Environment variable PORT (use when we
 const bodyParser = require("body-parser");
 const cookie = require('cookie-parser');
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
 
 //Bring in Helper functions from separate file
 const {verifyShortUrl, randomString, checkIfAvail, addUser, getUserByEmail, currentUser, urlsForUser} = require('./helperFunctions');
@@ -38,7 +39,7 @@ const userDatabase = {
     id: "penguin", 
     email: "penguin@ocean.com", 
     password: "swim123"
-  }
+  },
 }
 
 
@@ -46,7 +47,13 @@ const userDatabase = {
 //GET requests/////////////////////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {
-  res.send("Hello sunshine!");
+
+  const current_user = currentUser(req.cookies['user_id'], userDatabase);
+
+  if (!current_user) {
+    res.redirect("/login");
+  }
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -56,6 +63,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
+
 
 //add /urls to send data to urls_index.ejs, all urls displayed on main page
 app.get("/urls", (req, res) => {
@@ -103,6 +111,21 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   });
 
+
+//User registration form 
+app.get("/register", (req, res) => {
+  templateVars = { current_user: currentUser(req.cookies['user_id'], userDatabase)};
+  res.render("urls_register", templateVars);
+  res.redirect('/urls');
+})
+
+app.get("/login", (req, res) => {
+  templateVars = { current_user: currentUser(req.cookies['user_id'], userDatabase)};
+  res.render("login", templateVars);
+});
+
+
+
 //POST requests//////////////////////////////////////////////////////////////////////
 
 
@@ -125,8 +148,7 @@ app.get("/u/:shortURL", (req, res) => {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   } else {
-    res.status(404);
-    res.send('Does not exist');
+    res.status(404).send('Does not exist');
   }
 });
 
@@ -134,13 +156,10 @@ app.get("/u/:shortURL", (req, res) => {
 //Post route: removes an URL resource
 app.post('/urls/:shortURL/delete', (req, res) => {
 
-  const current_user = currentUser(req.cookies['user_id'], userDatabase);
-  const shortURL = req.params.shortURL;
-
-  if (current_user !== urlDatabase[shortURL].userID) {
-    res.send("This id does not match yours. Check id and try again.");
+  if (!checkOwner(currentUser(req.cookies['user_id'], userDatabase), req.params.shortURL, urlDatabase)) {
+    res.send('This id does not match yours. Please check id and try again.')
   }
-  delete urlDatabase[shortURL];
+  delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
@@ -155,18 +174,12 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   
 
 
-//User registration form 
-app.get("/register", (req, res) => {
-  templateVars = { current_user: currentUser(req.cookies['user_id'], userDatabase)}
-  res.render("urls_register", templateVars);
-  res.redirect('/urls');
-})
-
 
 
 app.post("/register", (req, res) => {
 
   const {password} = req.body;
+  const hashedPwd = bcrypt.hashSync(password, 10)
   const email = req.body['email-address']
 
   if (email === '') {
@@ -176,6 +189,7 @@ app.post("/register", (req, res) => {
   } else if (!checkIfAvail(email, userDatabase)) {
     res.status(400).send('This email is already registered');
   } else {
+    req.body['password'] = hashedPwd;
   const newUser = addUser(req.body, userDatabase)
   res.cookie('user_id', newUser.id)
   res.redirect('/urls');
@@ -183,11 +197,7 @@ app.post("/register", (req, res) => {
 })
   
 
-app.get("/login", (req, res) => {
-  templateVars = { current_user: currentUser(req.cookies['user_id'], userDatabase) }
-  res.render("login", templateVars);
-});
-
+//LOGIN - helper func verify email & password match database
 app.post("/login", (req, res) => {
 
   const emailUsed = req.body['email-address'];
@@ -197,7 +207,7 @@ app.post("/login", (req, res) => {
     const password = getUserByEmail(emailUsed, userDatabase).password;
     const id = getUserByEmail(emailUsed, userDatabase).id;
 
-    if (password !== pwdUsed) {
+    if (!bcrypt.compareSync(pwdUsed, password)) {
 
       res.status(403).send('Error 403... re-enter your password')
     } else {
@@ -212,8 +222,8 @@ app.post("/login", (req, res) => {
 
 // endpoint to logout
 app.post("/logout", (req, res) => {
-res.clearCookie('user_id');
-res.redirect('/urls');
+  res.clearCookie('user_id');
+  res.redirect('/urls');
 });
 
 
