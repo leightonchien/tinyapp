@@ -49,6 +49,7 @@ const userDatabase = {
 
 //GET requests/////////////////////////////////////////////////////////////////////
 
+//Redirect from / to urls page if logged in; otherwise redirect to login page if user not logged in
 app.get("/", (req, res) => {
 
   const user = currentUser(req.session.userId, userDatabase);
@@ -60,11 +61,7 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-
+// Render the urls_index HTML for the urls page if user is logged in; provide error page to login or register pages if not logged in
 //add /urls to send data to urls_index.ejs, all urls displayed on main page
 app.get("/urls", (req, res) => {
 
@@ -79,6 +76,7 @@ app.get("/urls", (req, res) => {
     }
 });
 
+//If logged in: render urls_new HTML; if not logged in: redirect to login page
 //new url is created
 app.get("/urls/new", (req, res) => { 
   
@@ -93,7 +91,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 
-
+//If logged in: render urls_show HTML; If not logged in: This id does not match yours. Please check id and try again.
 //tell browser to go to new page aka (redirect)
 app.get("/urls/:shortURL", (req, res) => {
 
@@ -115,7 +113,8 @@ app.get("/urls/:shortURL", (req, res) => {
   }  
   });
 
-// redirect to longURL
+  
+//Redirect to longURL associated with a short URL
 app.get("/u/:shortURL", (req, res) => {
 
   let shortURL = req.params.shortURL;
@@ -138,6 +137,7 @@ app.get("/register", (req, res) => {
   }
 });
 
+//Redirect from login to url if user is logged in, render urls_login page if user not logged in.
 app.get("/login", (req, res) => {
   const user = currentUser(req.session.userId, userDatabase);
   if (user) {
@@ -153,7 +153,7 @@ app.get("/login", (req, res) => {
 //POST requests//////////////////////////////////////////////////////////////////////
 
 
-//new url added to be shown with all urls
+//Post a new short url to the /urls page and redirect to the /urls/:shortURL page
 app.post("/urls", (req, res) => {
 
   const user = currentUser(req.session.userId, userDatabase);
@@ -169,8 +169,8 @@ app.post("/urls", (req, res) => {
 });
 
 
-//delete URL (for post requests on server side)
-//Post route: removes an URL resource
+//Delete URL 
+//Delete url from /urls page if logged in; send error message if url doesn't match their ID.
 app.post('/urls/:shortURL/delete', (req, res) => {
 
   if (!checkOwner(currentUser(req.session.userId, userDatabase), req.params.shortURL, urlDatabase)) {
@@ -181,7 +181,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   }
 });
 
-//EDIT: allows us to edit existing shortened URLs in app
+//EDIT: Edit a long url with respect to a short url if ID checks out; send error message if ID does not belong to currentUser.
 app.post("/urls/:shortURL/edit", (req, res) => {
 
   if (!checkOwner(currentUser(req.session.userId, userDatabase), req.params.shortURL, urlDatabase)) {
@@ -195,7 +195,9 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 
 
-
+//Generate random ID for new user, hash their password, both stored in userDatabase. 
+//Then redirect to /urls after registration is complete
+//Warn user if email/password field left empty or email is already taken.
 app.post("/register", (req, res) => {
 
   const {email, password} = req.body;
@@ -215,10 +217,10 @@ app.post("/register", (req, res) => {
 });
   
 
-//LOGIN - helper func verify email & password match database
+//LOGIN - getUserByEmail func check inputted email is matched with an user ID & password matches the hashed password in database
 app.post("/login", (req, res) => {
 
-  const emailUsed = req.body['email-address'];
+  const emailUsed = req.body['email'];
   const pwdUsed = req.body['password'];
 
   if (getUserByEmail(emailUsed, userDatabase)) {
@@ -237,7 +239,7 @@ app.post("/login", (req, res) => {
 
 });
 
-// endpoint to logout
+// endpoint to logout: clear cookies and redirect to /urls
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/urls');
