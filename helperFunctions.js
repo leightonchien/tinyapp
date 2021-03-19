@@ -27,13 +27,13 @@ const verifyShortUrl = (URL, database) => {
 
 //helpfer function: to check if emails are registered
 const checkIfAvail = (newVal, database) => {
-    for (user in database) {
+    for (let user in database) {
       if (database[user]['email-address'] === newVal) {
         return false;
       }
     }
     return true;
-  }
+  };
   
   //helper function: add user if available
   const addUser = (newUser, database) => {
@@ -43,14 +43,38 @@ const checkIfAvail = (newVal, database) => {
     return newUser;
   }
   
-  const fetchUserInfo = (email, database) => {
-    for (key in database) {
+  const getUserByEmail = (email, database) => {
+    for (let key in database) {
       if (database[key]['email-address'] === email) {
-        return database[key]
+        return database[key];
       }
     }
+  };
+  
+  const currentUser = (cookie, database) => {
+    for (let ids in database) {
+      if (cookie === ids) {
+        return database[ids]['email-address'];
+      }
+    }
+  };
+  
+  //return url when userID = id of current user
+  const urlsForUser = (id, database) => {
+
+    let currentUserId = id;
+    let usersURLs = {};
+
+    for (let key in database) {
+      if (database[key].userID === currentUserId) {
+        usersURLs[key] = database[key];
+      }
+    }
+    return usersURLs;
+  };
+
+  const checkOwner = (userId, urlID, database) => {
+    return userId === database[urlID].userID
   }
   
-  
-  
-  module.exports = { verifyShortUrl, randomString, checkIfAvail, addUser, fetchUserInfo }  
+  module.exports = {verifyShortUrl, randomString, checkIfAvail, addUser, getUserByEmail, currentUser, urlsForUser, checkOwner};  
